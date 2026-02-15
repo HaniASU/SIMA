@@ -43,13 +43,39 @@ export const LabelGenerator = () => {
     logoImage: printSettings.logoImage,
     showLogo: printSettings.showLogo,
     logoPosition: printSettings.logoPosition,
+    codeColor: printSettings.codeColor,
+    qrFillMode: printSettings.qrFillMode,
+    qrPatternImage: printSettings.qrPatternImage,
   })
+
+  const getMissingTemplateAssets = () => {
+    if (!printSettings.activeTemplateId) return []
+    const missing = []
+    if (printSettings.showLogo && !printSettings.logoImage) missing.push(t('settings.assetBrandLogo'))
+    if (printSettings.qrFillMode === 'image' && !printSettings.qrPatternImage) missing.push(t('settings.assetFillImage'))
+    return missing
+  }
+
+  const showTemplateAssetError = (missingAssets) => {
+    if (!missingAssets.length) return
+    const andWord = t('settings.andWord')
+    const text = missingAssets.length === 1
+      ? missingAssets[0]
+      : `${missingAssets.slice(0, -1).join(', ')} ${andWord} ${missingAssets[missingAssets.length - 1]}`
+    alert(t('settings.templateRequiresAssets').replace('{assets}', text))
+  }
 
 
 
   const labelsRef = useRef(null)
   
   const handleConfigReady = (config) => {
+    const missingAssets = getMissingTemplateAssets()
+    if (missingAssets.length > 0) {
+      showTemplateAssetError(missingAssets)
+      return
+    }
+
     setAiConfig(config)
     if (config.outputFormat) setExportFormat(config.outputFormat)
     // Use brand name from settings if not provided in config
@@ -75,6 +101,12 @@ export const LabelGenerator = () => {
   }
 
   const handleExport = async () => {
+    const missingAssets = getMissingTemplateAssets()
+    if (missingAssets.length > 0) {
+      showTemplateAssetError(missingAssets)
+      return
+    }
+
     try {
       setIsExporting(true)
       const baseSettings = printSettings.getSettings()
@@ -183,6 +215,12 @@ export const LabelGenerator = () => {
               onShowDataTextChange={printSettings.setShowDataText}
               dataFontSize={printSettings.dataFontSize}
               onDataFontSizeChange={printSettings.setDataFontSize}
+              codeColor={printSettings.codeColor}
+              onCodeColorChange={printSettings.setCodeColor}
+              qrFillMode={printSettings.qrFillMode}
+              onQrFillModeChange={printSettings.setQrFillMode}
+              qrPatternImage={printSettings.qrPatternImage}
+              onQrPatternImageChange={printSettings.setQrPatternImage}
               showBorder={printSettings.showBorder}
               onShowBorderChange={printSettings.setShowBorder}
               logoImage={printSettings.logoImage}

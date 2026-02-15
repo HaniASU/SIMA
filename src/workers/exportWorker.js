@@ -13,36 +13,101 @@ const PRINT_CONFIG = {
 };
 
 const cmToPixels = (cm, dpi) => (cm / PRINT_CONFIG.cmToInch) * dpi;
+const DEFAULT_DARK_COLOR = '#000000';
+
+const normalizeHexColor = (value, fallback = DEFAULT_DARK_COLOR) => {
+  const raw = String(value || '').trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toUpperCase();
+  if (/^[0-9a-fA-F]{6}$/.test(raw)) return `#${raw}`.toUpperCase();
+  return fallback;
+};
+
+const createMaskFromCanvasOffscreen = (sourceCanvas) => {
+  const width = sourceCanvas.width;
+  const height = sourceCanvas.height;
+  const maskCanvas = new OffscreenCanvas(width, height);
+  const maskCtx = maskCanvas.getContext('2d');
+  maskCtx.drawImage(sourceCanvas, 0, 0, width, height);
+
+  const imageData = maskCtx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3];
+    if (!alpha) {
+      data[i + 3] = 0;
+      continue;
+    }
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+    const isDark = luminance < 180;
+    data[i] = 0;
+    data[i + 1] = 0;
+    data[i + 2] = 0;
+    data[i + 3] = isDark ? 255 : 0;
+  }
+  maskCtx.putImageData(imageData, 0, 0);
+  return maskCanvas;
+};
+
+const applyFillToMaskOffscreen = (maskCanvas, codeColor = DEFAULT_DARK_COLOR, patternBitmap = null) => {
+  const width = maskCanvas.width;
+  const height = maskCanvas.height;
+  const darkColor = normalizeHexColor(codeColor, DEFAULT_DARK_COLOR);
+  const outputCanvas = new OffscreenCanvas(width, height);
+  const ctx = outputCanvas.getContext('2d');
+
+  if (patternBitmap) {
+    ctx.drawImage(patternBitmap, 0, 0, width, height);
+  } else {
+    ctx.fillStyle = darkColor;
+    ctx.fillRect(0, 0, width, height);
+  }
+
+  ctx.globalCompositeOperation = 'destination-in';
+  ctx.drawImage(maskCanvas, 0, 0, width, height);
+
+  ctx.globalCompositeOperation = 'destination-over';
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, height);
+  ctx.globalCompositeOperation = 'source-over';
+
+  return outputCanvas;
+};
 
 // Worker-compatible Code Generators
 
-const generateQRCodeOffscreen = async (data, sizePx) => {
-  const canvas = new OffscreenCanvas(sizePx, sizePx);
-  await QRCode.toCanvas(canvas, data, {
+const generateQRCodeOffscreen = async (data, sizePx, codeColor = DEFAULT_DARK_COLOR, patternBitmap = null) => {
+  const rawCanvas = new OffscreenCanvas(sizePx, sizePx);
+  await QRCode.toCanvas(rawCanvas, data, {
     margin: 0,
     width: sizePx,
+    errorCorrectionLevel: 'H',
+    color: {
+      dark: '#000000',
+      light: '#FFFFFF',
+    },
   });
-  return canvas; // Returns OffscreenCanvas
+
+  const maskCanvas = createMaskFromCanvasOffscreen(rawCanvas);
+  return applyFillToMaskOffscreen(maskCanvas, codeColor, patternBitmap);
 };
 
-const generateQRWithLogoOffscreen = async (data, sizePx, logoBitmap, position = 'center') => {
+const generateQRWithLogoOffscreen = async (
+  data,
+  sizePx,
+  logoBitmap,
+  position = 'center',
+  codeColor = DEFAULT_DARK_COLOR,
+  patternBitmap = null
+) => {
   try {
-    const canvas = new OffscreenCanvas(sizePx, sizePx);
+    const canvas = await generateQRCodeOffscreen(data, sizePx, codeColor, patternBitmap);
     const ctx = canvas.getContext('2d');
 
-    // 1. Generate QR on temp canvas
-    const qrCanvas = new OffscreenCanvas(sizePx, sizePx);
-    await QRCode.toCanvas(qrCanvas, data, {
-      margin: 0,
-      width: sizePx,
-      errorCorrectionLevel: 'H',
-    });
-
-    // 2. Draw QR
-    ctx.drawImage(qrCanvas, 0, 0);
-
     if (logoBitmap) {
-      // 3. Calculate Logo Size & Position
+      // Calculate logo size and placement.
       const logoSize = sizePx * 0.25;
       const pad = sizePx * 0.04;
       let logoX, logoY;
@@ -77,38 +142,53 @@ const generateQRWithLogoOffscreen = async (data, sizePx, logoBitmap, position = 
     return canvas;
   } catch (error) {
     console.error('Worker QR+Logo error', error);
-    return generateQRCodeOffscreen(data, sizePx);
+    return generateQRCodeOffscreen(data, sizePx, codeColor, patternBitmap);
   }
 };
 
-const generateBarcodeOffscreen = (data, width, height) => {
-  const canvas = new OffscreenCanvas(width, height);
-  // Draw barcode on OffscreenCanvas
-  JsBarcode(canvas, data, {
+const generateBarcodeOffscreen = (data, width, height, codeColor = DEFAULT_DARK_COLOR, patternBitmap = null) => {
+  const normalizedWidth = Math.max(1, Math.round(width));
+  const normalizedHeight = Math.max(1, Math.round(height));
+  const rawCanvas = new OffscreenCanvas(normalizedWidth, normalizedHeight);
+  JsBarcode(rawCanvas, data, {
     format: 'CODE128',
-    width: Math.max(1, Math.round(width / 100)),
-    height: Math.round(height),
+    width: Math.max(1, Math.round(normalizedWidth / 100)),
+    height: normalizedHeight,
     displayValue: false,
     margin: 0,
+    lineColor: '#000000',
+    background: '#ffffff',
   });
-  return canvas;
+  const maskCanvas = createMaskFromCanvasOffscreen(rawCanvas);
+  return applyFillToMaskOffscreen(maskCanvas, codeColor, patternBitmap);
 };
 
-const generateDataMatrixOffscreen = (data, sizePx) => {
-  const canvas = new OffscreenCanvas(sizePx, sizePx);
-  // bwip-js supports canvas drawing
-  bwipjs.toCanvas(canvas, {
+const generateDataMatrixOffscreen = (data, sizePx, codeColor = DEFAULT_DARK_COLOR, patternBitmap = null) => {
+  const normalizedSize = Math.max(1, Math.round(sizePx));
+  const rawCanvas = new OffscreenCanvas(normalizedSize, normalizedSize);
+  bwipjs.toCanvas(rawCanvas, {
     bcid: 'datamatrix',
     text: data,
-    scale: Math.max(2, Math.round(sizePx / 30)),
+    scale: Math.max(2, Math.round(normalizedSize / 30)),
     padding: 0,
+    foregroundcolor: '000000',
+    backgroundcolor: 'FFFFFF',
   });
-  return canvas;
+  const maskCanvas = createMaskFromCanvasOffscreen(rawCanvas);
+  return applyFillToMaskOffscreen(maskCanvas, codeColor, patternBitmap);
 };
 
 // --- Logic ---
 
-const preloadCodeImagesOffscreen = async (labels, codeW, codeH, logoBitmap, logoPosition) => {
+const preloadCodeImagesOffscreen = async (
+  labels,
+  codeW,
+  codeH,
+  logoBitmap,
+  logoPosition,
+  codeColor,
+  qrPatternBitmap
+) => {
   const cache = new Map();
   const promises = [];
 
@@ -122,14 +202,21 @@ const preloadCodeImagesOffscreen = async (labels, codeW, codeH, logoBitmap, logo
       try {
         let canvas;
         if (label.type === 'barcode') {
-          canvas = generateBarcodeOffscreen(label.qrData, codeW, codeH);
+          canvas = generateBarcodeOffscreen(label.qrData, codeW, codeH, codeColor, qrPatternBitmap);
         } else if (label.type === 'datamatrix') {
-          canvas = generateDataMatrixOffscreen(label.qrData, codeW);
+          canvas = generateDataMatrixOffscreen(label.qrData, codeW, codeColor, qrPatternBitmap);
         } else {
           if (logoBitmap) {
-            canvas = await generateQRWithLogoOffscreen(label.qrData, codeW, logoBitmap, logoPosition);
+            canvas = await generateQRWithLogoOffscreen(
+              label.qrData,
+              codeW,
+              logoBitmap,
+              logoPosition,
+              codeColor,
+              qrPatternBitmap
+            );
           } else {
-            canvas = await generateQRCodeOffscreen(label.qrData, codeW);
+            canvas = await generateQRCodeOffscreen(label.qrData, codeW, codeColor, qrPatternBitmap);
           }
         }
         // Store the OffscreenCanvas directly (or ImageBitmap)
@@ -261,9 +348,8 @@ self.onmessage = async (e) => {
       const labelsPerPage = cols * rows;
 
       const totalPages = Math.ceil(labels.length / labelsPerPage);
-      
+      const codeColor = normalizeHexColor(printSettings.codeColor, DEFAULT_DARK_COLOR);
 
-      
       let logoBitmap = null;
       if (printSettings.showLogo && printSettings.logoImage) {
         try {
@@ -276,7 +362,26 @@ self.onmessage = async (e) => {
         }
       }
 
-      const imageCache = await preloadCodeImagesOffscreen(labels, labelWidth, labelHeight, logoBitmap, printSettings.logoPosition);
+      let qrPatternBitmap = null;
+      if (printSettings.qrFillMode === 'image' && printSettings.qrPatternImage) {
+        try {
+          const res = await fetch(printSettings.qrPatternImage);
+          const blob = await res.blob();
+          qrPatternBitmap = await createImageBitmap(blob);
+        } catch (e) {
+          console.error('Failed to load QR pattern image in worker', e);
+        }
+      }
+
+      const imageCache = await preloadCodeImagesOffscreen(
+        labels,
+        labelWidth,
+        labelHeight,
+        logoBitmap,
+        printSettings.logoPosition,
+        codeColor,
+        qrPatternBitmap
+      );
       
       const pageBlobs = []; // will store blobs of each page
 

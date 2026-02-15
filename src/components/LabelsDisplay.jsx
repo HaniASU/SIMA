@@ -12,6 +12,13 @@ export const LabelsDisplay = ({
   onExportFormatChange,
 }) => {
   const { t } = useLocale()
+  const readyTextKey =
+    labels.length === 0
+      ? 'labels.labelsReadyZero'
+      : labels.length === 1
+        ? 'labels.labelsReadySingular'
+        : 'labels.labelsReadyPlural'
+  const readyText = t(readyTextKey).replace('{count}', String(labels.length))
 
   return (
     <div className="sc-card sc-labels__card">
@@ -19,7 +26,7 @@ export const LabelsDisplay = ({
         <div>
           <h3 className="sc-labels__title">{t('labels.productionQueue')}</h3>
           <p className="sc-labels__subtitle">
-            {labels.length} {labels.length !== 1 ? (t('labels.labelsReady').replace('{count}', labels.length).replace('{s}', 's')) : (t('labels.labelsReady').replace('{count}', labels.length).replace('{s}', ''))}
+            {readyText}
           </p>
         </div>
 

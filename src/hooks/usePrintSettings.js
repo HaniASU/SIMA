@@ -4,6 +4,40 @@ import { LABEL_DEFAULTS } from '../utils/constants';
 // A4 dimensions in cm
 const A4_WIDTH_CM = 21;
 const A4_HEIGHT_CM = 29.7;
+const DEFAULT_CODE_COLOR = '#000000';
+const DEFAULT_TEMPLATE_SETTINGS = {
+  showBorder: LABEL_DEFAULTS.showBorder,
+  brandName: '',
+  showBrandName: true,
+  brandFontSize: 12,
+  showDataText: false,
+  dataFontSize: 10,
+  codeColor: DEFAULT_CODE_COLOR,
+  qrFillMode: 'color',
+  qrPatternImage: null,
+  sizingMode: 'default',
+  columns: 4,
+  rows: 6,
+  labelWidthCm: LABEL_DEFAULTS.labelWidthCm,
+  labelHeightCm: LABEL_DEFAULTS.labelHeightCm,
+  showLogo: false,
+  logoPosition: 'center',
+  logoImage: null,
+};
+
+const normalizeHexColor = (value, fallback = DEFAULT_CODE_COLOR) => {
+  const raw = String(value || '').trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toUpperCase();
+  if (/^[0-9a-fA-F]{6}$/.test(raw)) return `#${raw}`.toUpperCase();
+  return fallback;
+};
+
+const normalizeTemplateSettings = (settings = {}) => ({
+  ...DEFAULT_TEMPLATE_SETTINGS,
+  ...settings,
+  codeColor: normalizeHexColor(settings.codeColor ?? DEFAULT_TEMPLATE_SETTINGS.codeColor),
+  qrFillMode: settings.qrFillMode === 'image' ? 'image' : 'color',
+});
 
 export const usePrintSettings = () => {
   const [showBorder, setShowBorder] = useState(LABEL_DEFAULTS.showBorder);
@@ -12,6 +46,9 @@ export const usePrintSettings = () => {
   const [brandFontSize, setBrandFontSize] = useState(12);
   const [showDataText, setShowDataText] = useState(false);
   const [dataFontSize, setDataFontSize] = useState(10);
+  const [codeColor, setCodeColorState] = useState(DEFAULT_CODE_COLOR);
+  const [qrFillMode, setQrFillModeState] = useState('color'); // 'color' | 'image'
+  const [qrPatternImage, setQrPatternImage] = useState(null); // Base64 image
 
   // 'default' | 'count' | 'custom' | 'both'
   const [sizingMode, setSizingMode] = useState('default');
@@ -29,7 +66,13 @@ export const usePrintSettings = () => {
   const [savedTemplates, setSavedTemplates] = useState(() => {
     try {
       const saved = localStorage.getItem('sima-print-templates');
-      return saved ? JSON.parse(saved) : [];
+      if (!saved) return [];
+      const parsed = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.map((template) => ({
+        ...template,
+        settings: normalizeTemplateSettings(template?.settings),
+      }));
     } catch (e) {
       return [];
     }
@@ -37,17 +80,29 @@ export const usePrintSettings = () => {
 
   const [activeTemplateId, setActiveTemplateId] = useState(null);
 
+  const setCodeColor = (value) => {
+    setCodeColorState(normalizeHexColor(value));
+  };
+
+  const setQrFillMode = (mode) => {
+    setQrFillModeState(mode === 'image' ? 'image' : 'color');
+  };
+
   const saveTemplate = (name) => {
     const newTemplate = {
       id: Date.now().toString(),
       name,
       settings: {
+        ...DEFAULT_TEMPLATE_SETTINGS,
         showBorder,
         brandName,
         showBrandName,
         brandFontSize,
         showDataText,
         dataFontSize,
+        codeColor: normalizeHexColor(codeColor),
+        qrFillMode,
+        qrPatternImage,
         sizingMode,
         columns,
         rows,
@@ -55,7 +110,7 @@ export const usePrintSettings = () => {
         labelHeightCm,
         showLogo,
         logoPosition,
-        logoImage
+        logoImage,
       }
     };
     const updated = [...savedTemplates, newTemplate];
@@ -72,21 +127,24 @@ export const usePrintSettings = () => {
   };
 
   const loadTemplate = (template) => {
-    const s = template.settings;
-    if (s.showBorder !== undefined) setShowBorder(s.showBorder);
-    if (s.brandName !== undefined) setBrandName(s.brandName);
-    if (s.showBrandName !== undefined) setShowBrandName(s.showBrandName);
-    if (s.brandFontSize !== undefined) setBrandFontSize(s.brandFontSize);
-    if (s.showDataText !== undefined) setShowDataText(s.showDataText);
-    if (s.dataFontSize !== undefined) setDataFontSize(s.dataFontSize);
-    if (s.sizingMode !== undefined) setSizingMode(s.sizingMode);
-    if (s.columns !== undefined) setColumns(s.columns);
-    if (s.rows !== undefined) setRows(s.rows);
-    if (s.labelWidthCm !== undefined) setLabelWidthCm(s.labelWidthCm);
-    if (s.labelHeightCm !== undefined) setLabelHeightCm(s.labelHeightCm);
-    if (s.showLogo !== undefined) setShowLogo(s.showLogo);
-    if (s.logoPosition !== undefined) setLogoPosition(s.logoPosition);
-    if (s.logoImage !== undefined) setLogoImage(s.logoImage);
+    const s = normalizeTemplateSettings(template?.settings);
+    setShowBorder(s.showBorder);
+    setBrandName(s.brandName);
+    setShowBrandName(s.showBrandName);
+    setBrandFontSize(s.brandFontSize);
+    setShowDataText(s.showDataText);
+    setDataFontSize(s.dataFontSize);
+    setCodeColor(s.codeColor);
+    setQrFillMode(s.qrFillMode);
+    setQrPatternImage(s.qrPatternImage);
+    setSizingMode(s.sizingMode);
+    setColumns(s.columns);
+    setRows(s.rows);
+    setLabelWidthCm(s.labelWidthCm);
+    setLabelHeightCm(s.labelHeightCm);
+    setShowLogo(s.showLogo);
+    setLogoPosition(s.logoPosition);
+    setLogoImage(s.logoImage);
     setActiveTemplateId(template.id);
   };
 
@@ -99,7 +157,11 @@ export const usePrintSettings = () => {
       const template = JSON.parse(fileContent);
       if (!template.name || !template.settings) throw new Error('Invalid template');
       // Ensure unique ID
-      const newTemplate = { ...template, id: Date.now().toString() };
+      const newTemplate = {
+        ...template,
+        id: Date.now().toString(),
+        settings: normalizeTemplateSettings(template.settings),
+      };
       const updated = [...savedTemplates, newTemplate];
       setSavedTemplates(updated);
       localStorage.setItem('sima-print-templates', JSON.stringify(updated));
@@ -127,6 +189,9 @@ export const usePrintSettings = () => {
     setBrandFontSize(12);
     setShowDataText(false);
     setDataFontSize(10);
+    setCodeColorState(DEFAULT_CODE_COLOR);
+    setQrFillModeState('color');
+    setQrPatternImage(null);
     setSizingMode('default');
     setColumns(4);
     setRows(6);
@@ -175,6 +240,9 @@ export const usePrintSettings = () => {
       brandFontSize,
       showDataText,
       dataFontSize,
+      codeColor: normalizeHexColor(codeColor),
+      qrFillMode,
+      qrPatternImage,
       logoImage,
       showLogo,
       logoPosition,
@@ -205,6 +273,12 @@ export const usePrintSettings = () => {
     setShowDataText,
     dataFontSize,
     setDataFontSize,
+    codeColor,
+    setCodeColor,
+    qrFillMode,
+    setQrFillMode,
+    qrPatternImage,
+    setQrPatternImage,
     sizingMode,
     setSizingMode,
     columns,

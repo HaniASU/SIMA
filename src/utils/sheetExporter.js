@@ -24,7 +24,7 @@ const preloadCodeImages = async (labels, codeW, codeH) => {
       try {
         let dataUrl;
         if (label.type === 'barcode') {
-          dataUrl = generateBarcode(label.qrData, codeW, codeH);
+          dataUrl = await generateBarcode(label.qrData, codeW, codeH);
         } else if (label.type === 'datamatrix') {
           dataUrl = await generateDataMatrix(label.qrData, codeW);
         } else {

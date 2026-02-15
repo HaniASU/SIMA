@@ -160,6 +160,18 @@
   background: rgba(0, 0, 0, 0.02);
 }
 
+[data-theme="light"] .sc-toggle-section {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .sc-setting-section {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .sc-toggle-section > .sc-toggle-row {
+  background: transparent;
+}
+
 [data-theme="light"] .sc-stat {
   background: rgba(0, 0, 0, 0.03);
 }
@@ -1007,6 +1019,54 @@ textarea:disabled {
   margin-top: 2px;
 }
 
+.sc-logo-upload--compact {
+  padding: 14px;
+  gap: 8px;
+  border-width: 1.5px;
+}
+
+.sc-logo-upload--compact .sc-logo-upload__icon {
+  width: 36px;
+  height: 36px;
+}
+
+.sc-logo-upload--compact .sc-logo-upload__text {
+  font-size: 12px;
+}
+
+.sc-logo-upload--compact .sc-logo-upload__hint {
+  font-size: 10px;
+}
+
+.sc-logo-preview--compact {
+  padding: 10px;
+  gap: 10px;
+}
+
+.sc-logo-preview--compact .sc-logo-preview__img {
+  width: 40px;
+  height: 40px;
+}
+
+.sc-logo-preview--compact .sc-logo-preview__title {
+  font-size: 12px;
+}
+
+.sc-logo-preview--compact .sc-logo-preview__sub {
+  font-size: 10px;
+}
+
+.sc-pos-grid--compact {
+  max-width: 132px;
+  gap: 3px;
+  padding: 4px;
+}
+
+.sc-pos-grid--compact .sc-pos-grid__dot {
+  width: 7px;
+  height: 7px;
+}
+
 /* =============================================
    BUTTONS
    ============================================= */
@@ -1345,6 +1405,114 @@ textarea:disabled {
   border: 1px solid var(--border);
   border-radius: var(--r-md);
   margin-top: var(--sp-3);
+}
+
+.sc-toggle-section {
+  margin-top: var(--sp-3);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.sc-setting-section {
+  margin-top: var(--sp-3);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.sc-setting-section__head {
+  width: 100%;
+  padding: var(--sp-3) var(--sp-4);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: inherit;
+}
+
+.sc-setting-section__head strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sc-setting-section__head .sc-u-muted {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+.sc-setting-section__body {
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.sc-setting-section--compact .sc-setting-section__head {
+  padding: var(--sp-2) var(--sp-4);
+}
+
+.sc-setting-section--compact .sc-setting-section__body {
+  padding: var(--sp-2) var(--sp-4) var(--sp-3);
+  gap: var(--sp-2);
+}
+
+.sc-collapse-head {
+  cursor: pointer;
+}
+
+.sc-collapse-head:disabled {
+  cursor: not-allowed;
+}
+
+.sc-collapse-head__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--text-tertiary);
+  transition: transform 180ms ease, color 180ms ease;
+}
+
+.sc-collapse-head__icon.is-open {
+  transform: rotate(180deg);
+  color: var(--text-secondary);
+}
+
+.sc-toggle-section > .sc-toggle-row {
+  margin-top: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.sc-toggle-section__body {
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+}
+
+.sc-toggle-section__inline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sc-toggle-section__inline-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .sc-toggle-row strong {
@@ -1701,6 +1869,11 @@ textarea:disabled {
   .sc-label-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   }
+
+  .sc-toggle-section__inline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 /* ---- Mobile phones ---- */
@@ -1883,6 +2056,10 @@ textarea:disabled {
 /* Toggle switch must stay LTR so knob slides correctly */
 [dir="rtl"] .sc-toggle {
   direction: ltr;
+}
+
+[dir="rtl"] .sc-toggle-section__inline-label {
+  text-align: right;
 }
 
 /* Language toggle button */

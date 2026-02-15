@@ -1,6 +1,6 @@
-import { RotateCcw, Save, Trash2, FileText, Download, Upload, X, Lock, ImagePlus } from 'lucide-react'
+import { RotateCcw, Save, Trash2, FileText, Download, Upload, X, Lock, ImagePlus, ChevronDown } from 'lucide-react'
 import { Button } from './Button'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useLocale } from '../i18n/LocaleContext'
 
 export const SettingsForm = ({
@@ -20,6 +20,12 @@ export const SettingsForm = ({
   onShowDataTextChange,
   dataFontSize,
   onDataFontSizeChange,
+  codeColor,
+  onCodeColorChange,
+  qrFillMode,
+  onQrFillModeChange,
+  qrPatternImage,
+  onQrPatternImageChange,
   showBorder,
   onShowBorderChange,
   sizingMode,
@@ -47,7 +53,23 @@ export const SettingsForm = ({
   const [isSaving, setIsSaving] = useState(false)
   const fileInputRef = useRef(null)
   const logoInputRef = useRef(null)
+  const patternInputRef = useRef(null)
+  const templatePatternInputRef = useRef(null)
+  const [colorHexInput, setColorHexInput] = useState(codeColor || '#000000')
+  const [isLabelSizingExpanded, setIsLabelSizingExpanded] = useState(true)
+  const [isCodeColorExpanded, setIsCodeColorExpanded] = useState(true)
   const { t } = useLocale()
+
+  useEffect(() => {
+    setColorHexInput(codeColor || '#000000')
+  }, [codeColor])
+
+  const normalizeHexColor = (value, fallback = '#000000') => {
+    const raw = String(value || '').trim()
+    if (/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toUpperCase()
+    if (/^[0-9a-fA-F]{6}$/.test(raw)) return `#${raw}`.toUpperCase()
+    return fallback
+  }
 
   const handleSave = () => {
     if (!newTemplateName.trim()) return
@@ -73,7 +95,7 @@ export const SettingsForm = ({
 
     // Validate size (max 1MB approx)
     if (file.size > 1024 * 1024) {
-      alert('File too large. Please use a logo under 1MB.')
+      alert(t('settings.logoTooLarge'))
       return
     }
 
@@ -82,6 +104,29 @@ export const SettingsForm = ({
       onLogoImageChange(e.target.result)
     }
     reader.readAsDataURL(file)
+  }
+
+  const handlePatternUpload = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 2 * 1024 * 1024) {
+      alert(t('settings.fillTooLarge'))
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onload = (evt) => {
+      onQrPatternImageChange(evt.target.result)
+      onQrFillModeChange('image')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const commitHexColor = () => {
+    const normalized = normalizeHexColor(colorHexInput, codeColor || '#000000')
+    setColorHexInput(normalized)
+    onCodeColorChange(normalized)
   }
 
   const activeTemplate = savedTemplates.find(t => t.id === activeTemplateId)
@@ -138,8 +183,8 @@ export const SettingsForm = ({
 
             {showLogo && !logoImage && (
               <div style={{ padding: 10, background: 'var(--warning-bg)', border: '1px solid var(--warning)', borderRadius: 'var(--r-sm)', marginBottom: 12 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-primary)' }}>Logo required</div>
-                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>This template was saved with a brand logo. Upload one to match the original layout.</div>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-primary)' }}>{t('settings.logoRequired')}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>{t('settings.logoRequiredDesc')}</div>
                 <input
                   type="file"
                   ref={logoInputRef}
@@ -148,8 +193,39 @@ export const SettingsForm = ({
                   style={{ display: 'none' }}
                 />
                 <Button size="sm" variant="primary" icon={ImagePlus} onClick={() => logoInputRef.current?.click()}>
-                  Upload Logo
+                  {t('settings.uploadLogoBtn')}
                 </Button>
+              </div>
+            )}
+
+            {qrFillMode === 'image' && !qrPatternImage && (
+              <div style={{ padding: 10, background: 'var(--warning-bg)', border: '1px solid var(--warning)', borderRadius: 'var(--r-sm)', marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6, color: 'var(--text-primary)' }}>{t('settings.fillRequired')}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>{t('settings.fillRequiredDesc')}</div>
+                <input
+                  type="file"
+                  ref={templatePatternInputRef}
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handlePatternUpload}
+                  style={{ display: 'none' }}
+                />
+                <Button size="sm" variant="primary" icon={ImagePlus} onClick={() => templatePatternInputRef.current?.click()}>
+                  {t('settings.uploadFillBtn')}
+                </Button>
+              </div>
+            )}
+
+            {qrFillMode === 'image' && qrPatternImage && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, background: 'var(--surface)', borderRadius: 'var(--r-sm)', border: '1px solid var(--border)', marginBottom: 12 }}>
+                <img src={qrPatternImage} alt="Fill" style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4 }} />
+                <span style={{ fontSize: 12, color: 'var(--text-secondary)', flex: 1 }}>{t('settings.fillLoaded')}</span>
+                <button
+                  onClick={() => onQrPatternImageChange(null)}
+                  title={t('settings.removeFillImage')}
+                  style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', padding: 4 }}
+                >
+                  <Trash2 size={14} />
+                </button>
               </div>
             )}
 
@@ -210,131 +286,269 @@ export const SettingsForm = ({
 
       <div style={{ opacity: isLocked ? 0.6 : 1, pointerEvents: isLocked ? 'none' : 'auto', transition: 'opacity 0.2s' }}>
         {/* Label sizing section */}
-        <div>
-          <strong>{t('settings.labelSizing')}</strong>
-          <div className="sc-u-muted" style={{ marginBottom: 8 }}>{t('settings.labelSizingHint')}</div>
-          <div className="sc-choice sc-choice--4col">
-            <label className={`sc-choice__item ${sizingMode === 'default' ? 'is-active' : ''}`}>
-              <input type="radio" name="sizingMode" value="default" checked={sizingMode === 'default'} onChange={() => onSizingModeChange('default')} disabled={isLocked} />
-              <div className="sc-choice__content">{t('settings.default')}</div>
-            </label>
-            <label className={`sc-choice__item ${sizingMode === 'count' ? 'is-active' : ''}`}>
-              <input type="radio" name="sizingMode" value="count" checked={sizingMode === 'count'} onChange={() => onSizingModeChange('count')} disabled={isLocked} />
-              <div className="sc-choice__content">{t('settings.count')}</div>
-            </label>
-            <label className={`sc-choice__item ${sizingMode === 'custom' ? 'is-active' : ''}`}>
-              <input type="radio" name="sizingMode" value="custom" checked={sizingMode === 'custom'} onChange={() => onSizingModeChange('custom')} disabled={isLocked} />
-              <div className="sc-choice__content">{t('settings.custom')}</div>
-            </label>
-            <label className={`sc-choice__item ${sizingMode === 'both' ? 'is-active' : ''}`}>
-              <input type="radio" name="sizingMode" value="both" checked={sizingMode === 'both'} onChange={() => onSizingModeChange('both')} disabled={isLocked} />
-              <div className="sc-choice__content">{t('settings.both')}</div>
-            </label>
-          </div>
-        </div>
-
-        {(sizingMode === 'count' || sizingMode === 'both') && (
-          <div className="sc-form__grid sc-form__grid--2col">
-            <div className="sc-field">
-              <label>{t('settings.columnsLabel')}</label>
-              <input
-                type="number"
-                value={columns}
-                onChange={(e) => onColumnsChange(Math.max(1, Math.min(12, parseInt(e.target.value, 10) || 4)))}
-                min="1"
-                max="12"
-                disabled={isLocked}
-              />
-            </div>
-            <div className="sc-field">
-              <label>{t('settings.rowsLabel')}</label>
-              <input
-                type="number"
-                value={rows}
-                onChange={(e) => onRowsChange(Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 6)))}
-                min="1"
-                max="20"
-                disabled={isLocked}
-              />
-            </div>
-          </div>
-        )}
-
-        {(sizingMode === 'custom' || sizingMode === 'both') && (
-          <div className="sc-form__grid sc-form__grid--2col">
-            <div className="sc-field">
-              <label>{t('settings.widthCm')}</label>
-              <input
-                type="number"
-                value={labelWidthCm}
-                onChange={(e) => onLabelWidthChange(Math.max(1, Math.min(20, parseFloat(e.target.value) || 4)))}
-                min="1"
-                max="20"
-                step="0.5"
-                disabled={isLocked}
-              />
-            </div>
-            <div className="sc-field">
-              <label>{t('settings.heightCm')}</label>
-              <input
-                type="number"
-                value={labelHeightCm}
-                onChange={(e) => onLabelHeightChange(Math.max(1, Math.min(28, parseFloat(e.target.value) || 3)))}
-                min="1"
-                max="28"
-                step="0.5"
-                disabled={isLocked}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* Brand title section */}
-        <div className="sc-toggle-row">
-          <div>
-            <strong>{t('settings.showBrandTitle')}</strong>
-            <div className="sc-u-muted">{t('settings.showBrandTitleDesc')}</div>
-          </div>
+        <div className="sc-setting-section">
           <button
             type="button"
-            className={`sc-toggle ${showBrandName ? 'is-on' : ''}`}
-            onClick={() => onShowBrandNameChange(!showBrandName)}
-            disabled={isLocked}
-            aria-label="Toggle brand title"
-            aria-pressed={showBrandName}
+            className="sc-setting-section__head sc-collapse-head"
+            onClick={() => setIsLabelSizingExpanded((prev) => !prev)}
+            aria-expanded={isLabelSizingExpanded}
           >
-            <span />
+            <div>
+              <strong>{t('settings.labelSizing')}</strong>
+              <div className="sc-u-muted">{t('settings.labelSizingHint')}</div>
+            </div>
+            <ChevronDown className={`sc-collapse-head__icon ${isLabelSizingExpanded ? 'is-open' : ''}`} size={16} />
           </button>
+
+          {isLabelSizingExpanded && (
+            <div className="sc-setting-section__body">
+              <div className="sc-choice sc-choice--4col">
+                <label className={`sc-choice__item ${sizingMode === 'default' ? 'is-active' : ''}`}>
+                  <input type="radio" name="sizingMode" value="default" checked={sizingMode === 'default'} onChange={() => onSizingModeChange('default')} disabled={isLocked} />
+                  <div className="sc-choice__content">{t('settings.default')}</div>
+                </label>
+                <label className={`sc-choice__item ${sizingMode === 'count' ? 'is-active' : ''}`}>
+                  <input type="radio" name="sizingMode" value="count" checked={sizingMode === 'count'} onChange={() => onSizingModeChange('count')} disabled={isLocked} />
+                  <div className="sc-choice__content">{t('settings.count')}</div>
+                </label>
+                <label className={`sc-choice__item ${sizingMode === 'custom' ? 'is-active' : ''}`}>
+                  <input type="radio" name="sizingMode" value="custom" checked={sizingMode === 'custom'} onChange={() => onSizingModeChange('custom')} disabled={isLocked} />
+                  <div className="sc-choice__content">{t('settings.custom')}</div>
+                </label>
+                <label className={`sc-choice__item ${sizingMode === 'both' ? 'is-active' : ''}`}>
+                  <input type="radio" name="sizingMode" value="both" checked={sizingMode === 'both'} onChange={() => onSizingModeChange('both')} disabled={isLocked} />
+                  <div className="sc-choice__content">{t('settings.both')}</div>
+                </label>
+              </div>
+
+              {(sizingMode === 'count' || sizingMode === 'both') && (
+                <div className="sc-form__grid sc-form__grid--2col">
+                  <div className="sc-field">
+                    <label>{t('settings.columnsLabel')}</label>
+                    <input
+                      type="number"
+                      value={columns}
+                      onChange={(e) => onColumnsChange(Math.max(1, Math.min(12, parseInt(e.target.value, 10) || 4)))}
+                      min="1"
+                      max="12"
+                      disabled={isLocked}
+                    />
+                  </div>
+                  <div className="sc-field">
+                    <label>{t('settings.rowsLabel')}</label>
+                    <input
+                      type="number"
+                      value={rows}
+                      onChange={(e) => onRowsChange(Math.max(1, Math.min(20, parseInt(e.target.value, 10) || 6)))}
+                      min="1"
+                      max="20"
+                      disabled={isLocked}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {(sizingMode === 'custom' || sizingMode === 'both') && (
+                <div className="sc-form__grid sc-form__grid--2col">
+                  <div className="sc-field">
+                    <label>{t('settings.widthCm')}</label>
+                    <input
+                      type="number"
+                      value={labelWidthCm}
+                      onChange={(e) => onLabelWidthChange(Math.max(1, Math.min(20, parseFloat(e.target.value) || 4)))}
+                      min="1"
+                      max="20"
+                      step="0.5"
+                      disabled={isLocked}
+                    />
+                  </div>
+                  <div className="sc-field">
+                    <label>{t('settings.heightCm')}</label>
+                    <input
+                      type="number"
+                      value={labelHeightCm}
+                      onChange={(e) => onLabelHeightChange(Math.max(1, Math.min(28, parseFloat(e.target.value) || 3)))}
+                      min="1"
+                      max="28"
+                      step="0.5"
+                      disabled={isLocked}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {showBrandName && (
-          <div className="sc-form__grid sc-form__grid--2col">
-            <div className="sc-field">
-              <label>{t('settings.brandName')}</label>
-              <input
-                type="text"
-                value={brandName}
-                onChange={(e) => onBrandNameChange(e.target.value)}
-                placeholder={t('settings.brandNamePlaceholder')}
-                disabled={isLocked}
-              />
+        {/* Code color/style section */}
+        <div className="sc-setting-section sc-setting-section--compact">
+          <button
+            type="button"
+            className="sc-setting-section__head sc-collapse-head"
+            onClick={() => setIsCodeColorExpanded((prev) => !prev)}
+            aria-expanded={isCodeColorExpanded}
+          >
+            <div>
+              <strong>{t('settings.codeColorTitle')}</strong>
+              <div className="sc-u-muted">{t('settings.codeColorDesc')}</div>
             </div>
-            <div className="sc-field">
-              <label>{t('settings.fontSize')}</label>
-              <input
-                type="number"
-                value={brandFontSize}
-                onChange={(e) => onBrandFontSizeChange(Math.max(6, Math.min(32, parseInt(e.target.value, 10) || 12)))}
-                min="6"
-                max="32"
-                disabled={isLocked}
-              />
+            <ChevronDown className={`sc-collapse-head__icon ${isCodeColorExpanded ? 'is-open' : ''}`} size={16} />
+          </button>
+
+          {isCodeColorExpanded && (
+            <div className="sc-setting-section__body">
+              <div className="sc-choice sc-form__grid--2col">
+                <label className={`sc-choice__item ${qrFillMode === 'color' ? 'is-active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="qrFillMode"
+                    value="color"
+                    checked={qrFillMode === 'color'}
+                    onChange={() => onQrFillModeChange('color')}
+                    disabled={isLocked}
+                  />
+                  <div className="sc-choice__content">{t('settings.solidColor')}</div>
+                </label>
+                <label className={`sc-choice__item ${qrFillMode === 'image' ? 'is-active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="qrFillMode"
+                    value="image"
+                    checked={qrFillMode === 'image'}
+                    onChange={() => onQrFillModeChange('image')}
+                    disabled={isLocked}
+                  />
+                  <div className="sc-choice__content">{t('settings.imageFill')}</div>
+                </label>
+              </div>
+
+              {qrFillMode === 'color' && (
+                <div className="sc-form__grid sc-form__grid--2col">
+                  <div className="sc-field">
+                    <label>{t('settings.colorPicker')}</label>
+                    <input
+                      type="color"
+                      value={normalizeHexColor(codeColor || '#000000')}
+                      onChange={(e) => {
+                        onCodeColorChange(e.target.value)
+                        setColorHexInput(e.target.value.toUpperCase())
+                      }}
+                      disabled={isLocked}
+                    />
+                  </div>
+                  <div className="sc-field">
+                    <label>{t('settings.hex')}</label>
+                    <input
+                      type="text"
+                      value={colorHexInput}
+                      onChange={(e) => setColorHexInput(e.target.value)}
+                      onBlur={commitHexColor}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') commitHexColor()
+                      }}
+                      placeholder="#000000"
+                      disabled={isLocked}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {qrFillMode === 'image' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <input
+                    type="file"
+                    ref={patternInputRef}
+                    accept="image/png, image/jpeg, image/webp"
+                    onChange={handlePatternUpload}
+                    style={{ display: 'none' }}
+                    disabled={isLocked}
+                  />
+
+                  {!qrPatternImage ? (
+                    <Button
+                      onClick={() => patternInputRef.current?.click()}
+                      icon={ImagePlus}
+                      variant="secondary"
+                      size="sm"
+                      disabled={isLocked}
+                    >
+                      {t('settings.uploadFillBtn')}
+                    </Button>
+                  ) : (
+                    <div className="sc-logo-preview">
+                      <div className="sc-logo-preview__img">
+                        <img src={qrPatternImage} alt="QR Fill" />
+                      </div>
+                      <div className="sc-logo-preview__info">
+                        <div className="sc-logo-preview__title">{t('settings.fillImageTitle')}</div>
+                        <div className="sc-logo-preview__sub">{t('settings.fillImageSub')}</div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        icon={Trash2}
+                        onClick={() => onQrPatternImageChange(null)}
+                        title={t('settings.removeFillImage')}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
+          )}
+        </div>
+
+        {/* Brand title section */}
+        <div className="sc-toggle-section">
+          <div className="sc-toggle-row">
+            <div>
+              <strong>{t('settings.showBrandTitle')}</strong>
+              <div className="sc-u-muted">{t('settings.showBrandTitleDesc')}</div>
+            </div>
+            <button
+              type="button"
+              className={`sc-toggle ${showBrandName ? 'is-on' : ''}`}
+              onClick={() => onShowBrandNameChange(!showBrandName)}
+              disabled={isLocked}
+              aria-label="Toggle brand title"
+              aria-pressed={showBrandName}
+            >
+              <span />
+            </button>
           </div>
-        )}
+
+          {showBrandName && (
+            <div className="sc-toggle-section__body">
+              <div className="sc-form__grid sc-form__grid--2col">
+                <div className="sc-field">
+                  <label>{t('settings.brandName')}</label>
+                  <input
+                    type="text"
+                    value={brandName}
+                    onChange={(e) => onBrandNameChange(e.target.value)}
+                    placeholder={t('settings.brandNamePlaceholder')}
+                    disabled={isLocked}
+                  />
+                </div>
+                <div className="sc-field">
+                  <label>{t('settings.fontSize')}</label>
+                  <input
+                    type="number"
+                    value={brandFontSize}
+                    onChange={(e) => onBrandFontSizeChange(Math.max(6, Math.min(32, parseInt(e.target.value, 10) || 12)))}
+                    min="6"
+                    max="32"
+                    disabled={isLocked}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Brand Logo section */}
-        <div className="sc-toggle-row">
+        <div className="sc-toggle-section">
+          <div className="sc-toggle-row">
           <div>
             <strong>{t('settings.showBrandLogo')}</strong>
             <div className="sc-u-muted">{t('settings.showBrandLogoDesc')}</div>
@@ -349,13 +563,13 @@ export const SettingsForm = ({
           >
             <span />
           </button>
-        </div>
+          </div>
 
-        {showLogo && (
-          <div style={{ marginTop: 12, marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {showLogo && (
+            <div className="sc-toggle-section__body">
             {/* Upload / Preview Area — full width */}
             {!logoImage ? (
-              <label className="sc-logo-upload">
+              <label className="sc-logo-upload sc-logo-upload--compact">
                 <input
                   type="file"
                   accept="image/png, image/jpeg"
@@ -370,7 +584,7 @@ export const SettingsForm = ({
                 <div className="sc-logo-upload__hint">{t('settings.uploadHint')}</div>
               </label>
             ) : (
-              <div className="sc-logo-preview">
+              <div className="sc-logo-preview sc-logo-preview--compact">
                 <div className="sc-logo-preview__img">
                   <img src={logoImage} alt="Logo" />
                 </div>
@@ -389,9 +603,9 @@ export const SettingsForm = ({
             )}
 
             {/* Position Picker — full width row */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{t('settings.position')}</div>
-              <div className="sc-pos-grid">
+            <div className="sc-toggle-section__inline">
+              <div className="sc-toggle-section__inline-label">{t('settings.position')}</div>
+              <div className="sc-pos-grid sc-pos-grid--compact">
                 {['top-left', 'top-center', 'top-right', 'center-left', 'center', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right'].map((pos) => (
                   <div
                     key={pos}
@@ -406,9 +620,11 @@ export const SettingsForm = ({
             </div>
           </div>
         )}
+        </div>
 
         {/* Content / Data section */}
-        <div className="sc-toggle-row">
+        <div className="sc-toggle-section">
+          <div className="sc-toggle-row">
           <div>
             <strong>{t('settings.showContentData')}</strong>
             <div className="sc-u-muted">{t('settings.showContentDataDesc')}</div>
@@ -423,10 +639,11 @@ export const SettingsForm = ({
           >
             <span />
           </button>
-        </div>
+          </div>
 
-        {showDataText && (
-          <div className="sc-form__grid sc-form__grid--2col">
+          {showDataText && (
+            <div className="sc-toggle-section__body">
+              <div className="sc-form__grid sc-form__grid--2col">
             <div className="sc-field">
               <label>{t('settings.dataFontSize')}</label>
               <input
@@ -438,11 +655,14 @@ export const SettingsForm = ({
                 disabled={isLocked}
               />
             </div>
-          </div>
-        )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Border section */}
-        <div className="sc-toggle-row">
+        <div className="sc-toggle-section">
+          <div className="sc-toggle-row">
           <div>
             <strong>{t('settings.showBorder')}</strong>
             <div className="sc-u-muted">{t('settings.showBorderDesc')}</div>
@@ -457,6 +677,7 @@ export const SettingsForm = ({
           >
             <span />
           </button>
+          </div>
         </div>
       </div>
 

@@ -30,6 +30,84 @@ export const useLabels = (logoSettings) => {
     localStorage.setItem('sima-history', JSON.stringify(history));
   }, [history]);
 
+  const getLabelSignature = (items) =>
+    items.map((label) => `${label.type || 'qr'}:${label.qrData}`).join('|');
+
+  const createThumbPromise = (label, style) => {
+    const patternImage = style.qrFillMode === 'image' ? style.qrPatternImage : null;
+    const qrOptions = {
+      darkColor: style.codeColor || '#000000',
+      patternImage,
+    };
+    const linearCodeOptions = {
+      darkColor: style.codeColor || '#000000',
+      patternImage,
+    };
+
+    if (label.type === 'barcode') {
+      return Promise.resolve(generateBarcodeThumbnail(label.qrData, linearCodeOptions));
+    }
+    if (label.type === 'datamatrix') {
+      return generateDataMatrixThumbnail(label.qrData, linearCodeOptions);
+    }
+    if (style.showLogo && style.logoImage) {
+      return generateQRWithLogo(label.qrData, 120, style.logoImage, style.logoPosition || 'center', qrOptions);
+    }
+    return generateQRThumbnail(label.qrData, qrOptions);
+  };
+
+  // Rebuild thumbnails when label set or style settings change.
+  useEffect(() => {
+    if (labels.length === 0) return;
+
+    const style = {
+      logoImage: logoSettings?.logoImage,
+      showLogo: logoSettings?.showLogo,
+      logoPosition: logoSettings?.logoPosition,
+      codeColor: logoSettings?.codeColor || '#000000',
+      qrFillMode: logoSettings?.qrFillMode || 'color',
+      qrPatternImage: logoSettings?.qrPatternImage || null,
+    };
+
+    const labelSnapshot = labels.map((label) => ({
+      ...label,
+      type: label.type || 'qr',
+    }));
+    const snapshotSig = getLabelSignature(labelSnapshot);
+    let cancelled = false;
+
+    Promise.all(
+      labelSnapshot.map((label) =>
+        createThumbPromise(label, style).catch((error) => {
+          console.error('Failed to generate thumbnail for label:', label.qrData, error);
+          return null;
+        })
+      )
+    ).then((thumbs) => {
+      if (cancelled) return;
+      setLabels((prev) => {
+        if (getLabelSignature(prev) !== snapshotSig) return prev;
+        return prev.map((label, idx) => ({
+          ...label,
+          thumb: thumbs[idx] || label.thumb || null,
+        }));
+      });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    labels.length,
+    getLabelSignature(labels),
+    logoSettings?.logoImage,
+    logoSettings?.showLogo,
+    logoSettings?.logoPosition,
+    logoSettings?.codeColor,
+    logoSettings?.qrFillMode,
+    logoSettings?.qrPatternImage,
+  ]);
+
   const addToHistory = (format) => {
     if (labels.length === 0) return;
     
@@ -123,32 +201,6 @@ export const useLabels = (logoSettings) => {
     const newLabels = Array.from({ length: count }, () => createLabel(month));
     console.log('New labels created:', newLabels.length);
     setLabels((prev) => [...prev, ...newLabels]);
-
-    // Generate thumbnails for newly added labels (with logo overlay if active)
-    const { logoImage: logo, showLogo, logoPosition } = logoSettings || {};
-    newLabels.forEach((label, idx) => {
-      const thumbPromise = (showLogo && logo)
-        ? generateQRWithLogo(label.qrData, 120, logo, logoPosition || 'center')
-        : generateQRThumbnail(label.qrData);
-      thumbPromise
-        .then((dataUrl) => {
-          console.log('Thumbnail generated for label', idx, ':', label.qrData);
-          setLabels((prev) => {
-            const updated = [...prev];
-            // Find and update the first matching label without a thumbnail
-            const index = updated.findIndex(
-              (lbl) => lbl.qrData === label.qrData && !lbl.thumb
-            );
-            if (index !== -1) {
-              updated[index] = { ...updated[index], thumb: dataUrl };
-            }
-            return updated;
-          });
-        })
-        .catch((error) => {
-          console.error('Failed to generate thumbnail for label:', label.qrData, error);
-        });
-    });
   };
 
   /**
@@ -174,35 +226,6 @@ export const useLabels = (logoSettings) => {
     }
 
     setLabels(newLabels);
-
-    // Generate thumbnails based on type (with logo overlay if active)
-    const { logoImage: logo, showLogo, logoPosition } = logoSettings || {};
-    newLabels.forEach((label, idx) => {
-      let generateThumb;
-      if (label.type === 'barcode') {
-        generateThumb = Promise.resolve(generateBarcodeThumbnail(label.qrData));
-      } else if (label.type === 'datamatrix') {
-        generateThumb = generateDataMatrixThumbnail(label.qrData);
-      } else if (showLogo && logo) {
-        generateThumb = generateQRWithLogo(label.qrData, 120, logo, logoPosition || 'center');
-      } else {
-        generateThumb = generateQRThumbnail(label.qrData);
-      }
-
-      generateThumb
-        .then((dataUrl) => {
-          setLabels((prev) => {
-            const updated = [...prev];
-            if (updated[idx] && !updated[idx].thumb) {
-              updated[idx] = { ...updated[idx], thumb: dataUrl };
-            }
-            return updated;
-          });
-        })
-        .catch((error) => {
-          console.error('Failed to generate thumbnail for label:', label.qrData, error);
-        });
-    });
   };
 
   /**
