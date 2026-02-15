@@ -567,6 +567,8 @@ export const SettingsForm = ({
 
           {showLogo && (
             <div className="sc-toggle-section__body">
+              <div className="sc-logo-settings-compact">
+                <div className="sc-logo-settings-compact__item">
             {/* Upload / Preview Area — full width */}
             {!logoImage ? (
               <label className="sc-logo-upload sc-logo-upload--compact">
@@ -578,7 +580,7 @@ export const SettingsForm = ({
                   style={{ display: 'none' }}
                 />
                 <div className="sc-logo-upload__icon">
-                  <ImagePlus size={22} />
+                  <ImagePlus size={18} />
                 </div>
                 <div className="sc-logo-upload__text">{t('settings.uploadBrandLogo')}</div>
                 <div className="sc-logo-upload__hint">{t('settings.uploadHint')}</div>
@@ -603,7 +605,8 @@ export const SettingsForm = ({
             )}
 
             {/* Position Picker — full width row */}
-            <div className="sc-toggle-section__inline">
+                </div>
+            <div className="sc-toggle-section__inline sc-logo-settings-compact__item sc-logo-settings-compact__item--position">
               <div className="sc-toggle-section__inline-label">{t('settings.position')}</div>
               <div className="sc-pos-grid sc-pos-grid--compact">
                 {['top-left', 'top-center', 'top-right', 'center-left', 'center', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right'].map((pos) => (
@@ -618,8 +621,9 @@ export const SettingsForm = ({
                 ))}
               </div>
             </div>
-          </div>
-        )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Content / Data section */}
