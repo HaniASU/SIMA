@@ -1,0 +1,127 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#09090b" />
+    <meta name="description" content="SIMA - Generate, customize, and export professional QR codes, barcodes, and Data Matrix labels in seconds." />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>SIMA</title>
+    <style>
+      /* FOUC prevention -#root is completely hidden until JS reveals it */
+      #root{visibility:hidden!important;height:0!important;overflow:hidden!important}
+      #root.ready{visibility:visible!important;height:auto!important;overflow:visible!important}
+
+      /* Shimmer skeleton */
+      .sima-loader{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;transition:opacity .4s ease}
+      .sima-loader.fade-out{opacity:0;pointer-events:none}
+      .sima-loader *{box-sizing:border-box}
+      @keyframes shimmer{0%{background-position:-600px 0}100%{background-position:600px 0}}
+
+      /* Light (default) */
+      .sima-loader{background:#f4f5f7}
+      .sh{background:linear-gradient(90deg,rgba(0,0,0,.04) 25%,rgba(0,0,0,.08) 50%,rgba(0,0,0,.04) 75%);background-size:600px 100%;animation:shimmer 1.8s ease-in-out infinite;border-radius:10px}
+      .sl-header{border-bottom:1px solid rgba(0,0,0,.06)}
+
+      /* Dark */
+      .sima-loader.dark{background:#0f1117}
+      .sima-loader.dark .sh{background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.04) 75%);background-size:600px 100%;animation:shimmer 1.8s ease-in-out infinite}
+      .sima-loader.dark .sl-header{border-bottom-color:rgba(255,255,255,.06)}
+
+      .sl-header{display:flex;align-items:center;justify-content:space-between;padding:14px 32px}
+      .sl-brand{display:flex;align-items:center;gap:12px}
+      .sl-icon{width:40px;height:40px;border-radius:12px}
+      .sl-title{width:80px;height:20px;border-radius:6px}
+      .sl-sub{width:260px;height:14px;border-radius:6px;margin-top:6px}
+      .sl-stats{display:flex;gap:16px}
+      .sl-stat{width:80px;height:36px;border-radius:8px}
+      .sl-hero{display:flex;flex-direction:column;align-items:center;padding:60px 32px 48px;gap:16px}
+      .sl-badge{width:200px;height:28px;border-radius:20px}
+      .sl-h{width:520px;height:36px;border-radius:8px}
+      .sl-p{width:400px;height:16px;border-radius:6px}
+      .sl-body{display:grid;grid-template-columns:1fr 380px;gap:24px;padding:0 32px;max-width:1260px;margin:0 auto;width:100%}
+      .sl-card{border-radius:18px;padding:28px;min-height:320px}
+      .sl-side{display:flex;flex-direction:column;gap:20px}
+      .sl-side-card{border-radius:18px;padding:24px;flex:1}
+      @media(max-width:1024px){.sl-body{grid-template-columns:1fr;max-width:720px}}
+      @media(max-width:680px){.sl-header{padding:12px 16px;flex-direction:column;align-items:flex-start;gap:10px}.sl-hero{padding:40px 20px 32px}.sl-h{width:280px;height:28px}.sl-p{width:240px}.sl-body{padding:0 16px}}
+    </style>
+    <script>
+      // Set theme class on shimmer and document BEFORE render
+      (function() {
+        const theme = localStorage.getItem('sima-theme');
+        if (theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          document.write('<div id="sima-loader" class="sima-loader dark">');
+        } else {
+          document.documentElement.setAttribute('data-theme', 'light');
+          document.write('<div id="sima-loader" class="sima-loader">');
+        }
+      })();
+    </script>
+      <div class="sl-header">
+        <div class="sl-brand">
+          <div class="sh sl-icon"></div>
+          <div><div class="sh sl-title"></div><div class="sh sl-sub"></div></div>
+        </div>
+        <div class="sl-stats"><div class="sh sl-stat"></div><div class="sh sl-stat"></div></div>
+      </div>
+      <div class="sl-hero">
+        <div class="sh sl-badge"></div>
+        <div class="sh sl-h"></div>
+        <div class="sh sl-p"></div>
+      </div>
+      <style>
+        /* ... existing styles ... */
+        .sl-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid rgba(0,0,0,.06)}
+        .sima-loader.dark .sl-card-head{border-bottom-color:rgba(255,255,255,.06)}
+        .sl-card-title{width:120px;height:24px;border-radius:6px}
+        .sl-card-badge{width:100px;height:24px;border-radius:12px}
+        .sl-tabs{display:flex;gap:4px;margin-bottom:32px;padding:4px;border-radius:12px;border:1px solid rgba(0,0,0,.06)}
+        .sima-loader.dark .sl-tabs{border-color:rgba(255,255,255,.06)}
+        .sl-tab{flex:1;height:40px;border-radius:8px}
+        .sl-form-row{display:flex;gap:16px;margin-bottom:24px}
+        .sl-input{flex:1;height:42px;border-radius:8px}
+        .sl-btn{height:42px;border-radius:8px;margin-top:24px}
+      </style>
+      <div class="sl-body">
+        <div class="sl-card" style="background:var(--surface)">
+          <div class="sl-card-head">
+            <div class="sh sl-card-title"></div>
+            <div class="sh sl-card-badge"></div>
+          </div>
+          <div class="sl-tabs">
+            <div class="sh sl-tab"></div>
+            <div class="sh sl-tab"></div>
+            <div class="sh sl-tab"></div>
+          </div>
+          <div class="sl-form-row">
+             <div class="sh sl-input"></div>
+             <div class="sh sl-input"></div>
+          </div>
+          <div class="sh sl-input" style="height:120px;margin-bottom:24px"></div>
+          <div class="sh sl-btn"></div>
+        </div>
+        <div class="sl-side">
+            <div class="sl-side-card" style="background:var(--surface)">
+                <div class="sh sl-card-title" style="margin-bottom:16px"></div>
+                <div class="sh sl-input" style="margin-bottom:12px"></div>
+                <div class="sh sl-input"></div>
+            </div>
+            <div class="sl-side-card" style="background:var(--surface)">
+                <div class="sh sl-card-title" style="margin-bottom:16px"></div>
+                <div class="sl-form-row">
+                    <div class="sh sl-input"></div>
+                    <div class="sh sl-input"></div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </div>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

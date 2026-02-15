@@ -1,0 +1,19 @@
+{
+  "name": "SIMA",
+  "short_name": "SIMA",
+  "description": "Professional AI-Powered Label & Barcode Generator",
+  "theme_color": "#09090b",
+  "background_color": "#09090b",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

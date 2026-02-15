@@ -1,0 +1,183 @@
+export const ar = {
+  // Header
+  header: {
+    title: 'سيما',
+    subtitle: 'مجموعة احترافية لتوليد الأكواد',
+    activeMode: 'الوضع الحالي',
+    queue: 'الطابور',
+    labelsCount: '{count} كود',
+    history: 'السجل',
+    theme: 'المظهر',
+    language: 'اللغة',
+  },
+
+  // Hero
+  hero: {
+    badge: 'توليد أكواد بـ AI',
+    title: 'ولّد',
+    titleHighlight: 'أكواد ذكية',
+    titleEnd: 'بسرعة خيالية مع AI',
+    subtitle: 'صمم وخصص وصدّر أكواد جاهزة للطباعة بمساعدة AI. يدوي، أوامر ذكية، أو رفع ملف.',
+  },
+
+  // Modes
+  modes: {
+    manual: 'يدوي',
+    ai: 'AI',
+    import: 'رفع ملف',
+  },
+
+  // Label Builder
+  builder: {
+    title: 'بناء الأكواد',
+    description: 'اختار الطريقة اللي تناسبك وابدأ.',
+  },
+
+  // Export Settings sidebar
+  exportSettings: {
+    title: 'إعدادات التصدير',
+    badge: 'معاينة لحظية',
+    note: 'ظبط شكل الأكواد وطريقة التصدير.',
+  },
+
+  // Session Summary
+  session: {
+    title: 'ملخص الجلسة',
+    mode: 'الوضع',
+    readyLabels: 'أكواد جاهزة',
+    export: 'تصدير',
+    columns: 'أعمدة',
+    perPage: 'في الصفحة',
+  },
+
+  // Manual Form
+  manual: {
+    codeType: 'نوع الكود',
+    qrCode: 'QR Code',
+    barcode: 'Barcode',
+    dataMatrix: 'Data Matrix',
+    contentData: 'المحتوى / البيانات',
+    contentPlaceholder: 'https://example.com، SKU-001، أو أي نص',
+    contentHint: 'القيمة دي هتتشفر زي ما هي بالظبط.',
+    quantity: 'الكمية',
+    generate: 'توليد',
+  },
+
+  // AI Prompt Form
+  ai: {
+    provider: 'مزود AI',
+    model: 'Model',
+    loadingModels: 'جاري تحميل الـ Models...',
+    apiKey: 'API Key',
+    apiKeyPlaceholder: 'الصق الـ API Key',
+    prompt: 'Prompt',
+    promptPlaceholder: 'مثال: "5 QR Codes بـ ID-{n} و 3 Barcodes بـ SKU-{n}، 4 أعمدة، A4، 4×3 سم، براند اسمها Tech، تصدير PDF."',
+    useSample: 'استخدم Prompt جاهز',
+    analyzing: 'جاري التحليل...',
+    analyzeWithAI: 'حلل بـ AI',
+    analysisFailed: 'تحليل AI فشل.',
+    configPreview: 'معاينة إعدادات AI',
+    codes: 'كود',
+    paper: 'الورق',
+    output: 'الخرج',
+    size: 'الحجم',
+    brand: 'براند',
+    providerLabel: 'المزود',
+    none: 'مفيش',
+    confirmGenerate: 'تأكيد وتوليد',
+  },
+
+  // Import Form
+  import: {
+    settingsNotice: 'إعدادات التصدير بتتطبق على الكل.',
+    settingsNoticeDesc: 'البراند والإطار ونص البيانات وحجم الكود من إعدادات التصدير بيتطبقوا على كل الأكواد المرفوعة، زي الوضع اليدوي.',
+    step1Title: 'الخطوة 1: حمّل القالب',
+    step1Desc: 'الأعمدة:',
+    csvTemplate: 'قالب CSV',
+    excelTemplate: 'قالب Excel',
+    jsonTemplate: 'قالب JSON',
+    step2Title: 'الخطوة 2: ارفع الملف',
+    step2Desc: 'الصيغ المقبولة: CSV، XLSX، XLS، JSON.',
+    chooseFile: 'اختار ملف',
+    importError: 'خطأ في الرفع',
+    parsedSuccess: 'تم القراءة بنجاح',
+    rows: 'صف',
+    hideData: 'إخفاء البيانات',
+    previewData: 'معاينة البيانات',
+    total: 'الإجمالي',
+    showingOf: 'عرض 12 من',
+    generateCodes: 'توليد {count} كود',
+    type: 'النوع',
+    data: 'البيانات',
+    count: 'العدد',
+  },
+
+  // Settings Form
+  settings: {
+    templates: 'القوالب',
+    templatesHint: 'حمّل إعدادات طباعة جاهزة.',
+    importBtn: 'رفع',
+    settingsLocked: 'الإعدادات مقفولة طول ما القالب شغال.',
+    exportTemplate: 'تصدير القالب',
+    load: 'تحميل',
+    noTemplates: 'مفيش قوالب محفوظة. ظبط الإعدادات تحت واحفظها من الأزرار اللي في الآخر.',
+    labelSizing: 'حجم الكود',
+    labelSizingHint: 'اختار إزاي الأكواد تتحجم على الصفحة.',
+    default: 'افتراضي',
+    count: 'عدد',
+    custom: 'مخصص',
+    both: 'الاتنين',
+    columnsLabel: 'أعمدة',
+    rowsLabel: 'صفوف',
+    widthCm: 'العرض (سم)',
+    heightCm: 'الارتفاع (سم)',
+    showBrandTitle: 'عرض اسم البراند',
+    showBrandTitleDesc: 'يظهر اسم البراند فوق كل كود.',
+    brandName: 'اسم البراند',
+    brandNamePlaceholder: 'مثال: شركتي',
+    fontSize: 'حجم الخط (px)',
+    showBrandLogo: 'عرض لوجو البراند',
+    showBrandLogoDesc: 'يحط اللوجو على أكواد QR.',
+    uploadBrandLogo: 'ارفع لوجو البراند',
+    uploadHint: 'PNG أو JPG - حد أقصى 1MB - مربع أفضل',
+    brandLogo: 'لوجو البراند',
+    readyForOverlay: 'جاهز للوضع',
+    position: 'المكان',
+    showContentData: 'عرض المحتوى / البيانات',
+    showContentDataDesc: 'يظهر نص البيانات تحت كل كود.',
+    dataFontSize: 'حجم خط البيانات (px)',
+    showBorder: 'عرض الإطار',
+    showBorderDesc: 'إطار حوالين كل كود للقص.',
+    templateNamePlaceholder: 'اسم القالب...',
+    save: 'حفظ',
+    cancel: 'إلغاء',
+    saveSettings: 'حفظ الإعدادات',
+    reset: 'رجّع الافتراضي',
+  },
+
+  // Labels Display
+  labels: {
+    productionQueue: 'الأكواد الناتجة',
+    labelsReady: '{count} كود{s} جاهز',
+    clear: 'مسح',
+    export: 'تصدير',
+    readyToCreate: 'جاهز تبدأ؟',
+    emptyHint: 'اختار طريقة من فوق وابدأ توليد أكواد احترافية.',
+    removeLabel: 'حذف الكود',
+  },
+
+  // History Section
+  history: {
+    title: 'سجل التصدير',
+    subtitle: 'استرجع الدفعات السابقة',
+    showHistory: 'عرض السجل',
+    hideHistory: 'إخفاء السجل',
+    noHistory: 'مفيش سجل تصدير لسه.',
+    labelsText: 'كود',
+    clearHistory: 'مسح السجل',
+    clearConfirm: 'متأكد إنك عايز تمسح كل السجل؟',
+  },
+
+  // Export
+  exportFailed: 'التصدير فشل. جرب تاني.',
+}
