@@ -407,6 +407,21 @@ p {
   box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3);
 }
 
+.sc-brand-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.sc-brand-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 1px;
+  height: 1.5px;
+  background: currentColor;
+}
+
 .sc-header__brand-title {
   font-size: 20px;
   font-weight: 800;

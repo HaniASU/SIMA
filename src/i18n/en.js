@@ -1,7 +1,7 @@
 export const en = {
   // Header
   header: {
-    title: 'SIMA',
+    title: 'SÍMA',
     subtitle: 'Professional Code Generation Suite',
     activeMode: 'Active Mode',
     queue: 'Queue',

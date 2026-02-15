@@ -33,7 +33,9 @@ export const Header = ({
             </div>
           ) : null}
           <div>
-            <h1 className="sc-header__brand-title">{t('header.title')}</h1>
+            <h1 className="sc-header__brand-title">
+              {locale === 'ar' ? t('header.title') : <>S<span className="sc-brand-underline">Í</span>MA</>}
+            </h1>
             <p className="sc-header__brand-subtitle">{t('header.subtitle')}</p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 export const ar = {
   // Header
   header: {
-    title: 'سيما',
+    title: 'سِيمَا',
     subtitle: 'مجموعة احترافية لتوليد الأكواد',
     activeMode: 'الوضع الحالي',
     queue: 'الطابور',
