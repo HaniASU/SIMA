@@ -1,4 +1,6 @@
-# SIMA - Smart Label Generator
+# SÍ̱MA - Smart Label Generator
+
+Derived from the Greek word **Σήμα**, meaning **Signal** or **Symbol**. 
 
 SIMA is a web-based label generator that lets you create, customize, and export print-ready QR codes, barcodes, and Data Matrix labels in bulk. Whether you need 5 labels or 1000, you can generate them manually, through natural language AI prompts, or by importing a spreadsheet.
 
