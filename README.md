@@ -6,7 +6,7 @@ SIMA is a web-based label generator that lets you create, customize, and export 
 
 Built with React and Vite. Exports to PDF, PNG, and SVG at 300 DPI - ready for professional printing.
 
-**Live demo:** [sima.demo](https://siima.netlify.app/)
+**Live demo:** [sima.demo](https://sima.siima.workers.dev/)
 
 ## What It Does
 
