@@ -1,10 +1,12 @@
-# SIMA - Smart Label Generator
+# SÍ̱MA - Smart Label Generator
+
+Derived from the Greek word **Σήμα**, meaning **Signal** or **Symbol**. 
 
 SIMA is a web-based label generator that lets you create, customize, and export print-ready QR codes, barcodes, and Data Matrix labels in bulk. Whether you need 5 labels or 1000, you can generate them manually, through natural language AI prompts, or by importing a spreadsheet.
 
 Built with React and Vite. Exports to PDF, PNG, and SVG at 300 DPI - ready for professional printing.
 
-**Live demo:** [simacode.netlify.app](https://siima.netlify.app/)
+**Live demo:** [sima.demo](https://siima.netlify.app/)
 
 ## What It Does
 
